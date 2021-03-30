@@ -1,5 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, RegexHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, Filters, RegexHandler, MessageHandler
 import requests, calendar
 import datetime
 import simplejson
@@ -7,6 +7,8 @@ from django.conf import settings
 from ._base import BotBase
 from main.models import UserTelegram, Client
 from main.functions import user_func, client_func
+from django.core.validators import EmailValidator
+from main.validators import PhoneValidator
 
 
 class Command(BotBase):
@@ -26,11 +28,11 @@ class Command(BotBase):
                 InlineKeyboardButton("Бронировать", callback_data='calendar')
             ],
             [
-                InlineKeyboardButton("Комнаты", callback_data='1')
+                InlineKeyboardButton("Комнаты", callback_data='1kom')
 
             ],
             [
-                InlineKeyboardButton("Условия", callback_data='2')
+                InlineKeyboardButton("Условия", callback_data='2kom')
 
             ],
             [
@@ -64,7 +66,7 @@ class Command(BotBase):
                 InlineKeyboardButton(f"Uy hayvoni {'❌' if user.pet == '0' else '✅'}", callback_data='pet')
             ],
             [
-                InlineKeyboardButton("Забронировать", callback_data='asd')
+                InlineKeyboardButton("Забронировать", callback_data='calendar2')
 
             ],
             [
@@ -107,7 +109,7 @@ class Command(BotBase):
 
             ],
             [
-                InlineKeyboardButton("Забронировать", callback_data='asd')
+                InlineKeyboardButton("Забронировать", callback_data='calendar2')
 
             ],
             [
@@ -150,7 +152,7 @@ class Command(BotBase):
 
             ],
             [
-                InlineKeyboardButton("Забронировать", callback_data='asd')
+                InlineKeyboardButton("Забронировать", callback_data='calendar2')
 
             ],
             [
@@ -192,7 +194,7 @@ class Command(BotBase):
 
             ],
             [
-                InlineKeyboardButton("Забронировать", callback_data='asd')
+                InlineKeyboardButton("Забронировать", callback_data='calendar2')
 
             ],
             [
@@ -219,7 +221,7 @@ class Command(BotBase):
         query.answer()
         keyboard = []
         menu = 'Меню'
-        if query.data == '1':
+        if query.data == '1kom':
             keyboard = [
                 [
                     InlineKeyboardButton("Economy", callback_data='comnE')
@@ -268,7 +270,7 @@ class Command(BotBase):
 
                 ],
                 [
-                    InlineKeyboardButton("Забронировать", callback_data='asd')
+                    InlineKeyboardButton("Забронировать", callback_data='calendar2')
 
                 ],
                 [
@@ -288,7 +290,7 @@ class Command(BotBase):
     Стоимость на 1 человека - 300.000 сум, детям до 12 лет бесплатно. Посещение доступно до 18:00.
         ''', reply_markup=reply_markup)
 
-        elif query.data == '2':
+        elif query.data == '2kom':
             keyboard = [
                 [
                     InlineKeyboardButton("Спа", callback_data='spa')
@@ -315,11 +317,11 @@ class Command(BotBase):
                     InlineKeyboardButton("Бронировать", callback_data='calendar')
                 ],
                 [
-                    InlineKeyboardButton("Комнаты", callback_data='1')
+                    InlineKeyboardButton("Комнаты", callback_data='1kom')
 
                 ],
                 [
-                    InlineKeyboardButton("Условия", callback_data='2')
+                    InlineKeyboardButton("Условия", callback_data='2kom')
 
                 ],
                 [
@@ -409,27 +411,52 @@ class Command(BotBase):
         ''', reply_markup=reply_markup)
 
     def calendar(self, update: Update, context: CallbackContext) -> None:
-        go = "0"
+
         query = update.callback_query
         query.answer()
-        keyboard = []
-        menu = 'Меню'
         user = user_func(update)
+        asd = datetime.date.today()
+        d1 = asd + datetime.timedelta(days=1)
+        d2 = asd + datetime.timedelta(days=2)
         keyboard = [
             [
-                InlineKeyboardButton('bugun', callback_data='25.03')
+                InlineKeyboardButton('bugun', callback_data='{}'.format(d1))
             ],
             [
-                InlineKeyboardButton('ertaga', callback_data='25.03')
+                InlineKeyboardButton('ertaga', callback_data='{}'.format(d2))
             ],
             [
                 InlineKeyboardButton('kalendar', callback_data='days')
             ]
         ]
-        print(keyboard)
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         query.edit_message_text("kunni tanlash", reply_markup=reply_markup)
+
+    def calendar2(self, update: Update, context: CallbackContext) -> None:
+
+        query = update.callback_query
+        query.answer()
+        query.message.delete()
+        asd = datetime.date.today()
+        print(asd)
+        d1 = asd + datetime.timedelta(days=1)
+        d2 = asd + datetime.timedelta(days=2)
+        user = user_func(update)
+        keyboard = [
+            [
+                InlineKeyboardButton('bugun', callback_data='{}'.format(d1))
+            ],
+            [
+                InlineKeyboardButton('ertaga', callback_data='{}'.format(d2))
+            ],
+            [
+                InlineKeyboardButton('kalendar', callback_data='days')
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        query.message.reply_text("kunni tanlash", reply_markup=reply_markup)
+
 
     def days(self, update: Update, context: CallbackContext) -> None:
         print('first day')
@@ -449,7 +476,7 @@ class Command(BotBase):
         while i <= 5:
             while y <= 6:
                 tmp.append(InlineKeyboardButton('{0:02d}.{1:02d}'.format(asd.day, asd.month),
-                                                callback_data='{0:02d}.{1:02d}'.format(asd.day, asd.month)))
+                                                callback_data='{}'.format(asd)))
                 asd += datetime.timedelta(days=1)
 
                 y += 1
@@ -465,10 +492,16 @@ class Command(BotBase):
 
         query = update.callback_query
         query.answer()
-        keyboard = []
-        menu = 'Меню'
+
         user = user_func(update)
-        asd = datetime.date.today()
+        mydate = query.data.replace('-', '/')
+        print(str(mydate)[2:])
+        date_time_str = str(mydate)[2:]+' 00:00:00'
+
+        date_time_obj = datetime.datetime.strptime(date_time_str, '%y/%m/%d %H:%M:%S')
+
+        asd = date_time_obj.date()
+        asd = asd + datetime.timedelta(days=1)
 
         tmp = []
         keyboard = []
@@ -488,12 +521,13 @@ class Command(BotBase):
         query.edit_message_text("oxirgi kunni tanlang", reply_markup=reply_markup)
 
     def done(self, update: Update, context: CallbackContext) -> None:
-
+        client = client_func(update)
+        user = user_func(update)
         query = update.callback_query
         query.answer()
-        keyboard = []
-        menu = 'Меню'
-        user = user_func(update)
+        client.state = Client.STATE_FULLNAME
+        client.save()
+
         asd = datetime.date.today()
 
         keyboard = [
@@ -501,9 +535,85 @@ class Command(BotBase):
                 InlineKeyboardButton('ortga', callback_data='asd')
             ]
         ]
-
         reply_markup = InlineKeyboardMarkup(keyboard)
-        query.edit_message_text("shuyerda registratsiya boladi", reply_markup=reply_markup)
+        query.edit_message_text("Xona olish uchun iltimos shaxsim ma'lumotlaringizni to'ldiring\nTo'liq ismingizni kiriting")
+
+    def message_handler(self, update: Update, context: CallbackContext) -> None:
+        try:
+            query = update.callback_query
+            query.answer()
+        except:
+            pass
+        client = client_func(update)
+        try:
+            msg = str(update.message.text).strip()
+        except:
+            pass
+        if client.state == Client.STATE_FULLNAME:
+            client.fullName = msg
+            client.state = Client.STATE_PHONE
+        elif client.state == Client.STATE_PHONE:
+            phoneValid = PhoneValidator()
+            try:
+                phoneValid(msg)
+            except:
+                update.message.reply_text("Iltmos to'g'ri telefon raqam kiriting")
+                return
+            client.phone = msg
+            client.state = Client.STATE_EMAIL
+        elif client.state == Client.STATE_EMAIL:
+            validator = EmailValidator()
+            try:
+                validator(msg)
+            except:
+                update.message.reply_text("Iltmos to'g'ri email kiriting")
+                return
+            client.email = msg
+            client.state = Client.STATE_COUNTRY
+        elif client.state == Client.STATE_COUNTRY:
+            client.country = msg
+            client.state = Client.STATE_IS_FIRM
+        elif client.state == Client.STATE_IS_FIRM:
+            query.message.delete()
+
+            client.is_firm = int(query.data)
+            client.state = 9
+        client.save()
+        self.state_response(update, client)
+
+    def state_response(self, update: Update, client: Client):
+        text = {
+            Client.STATE_FULLNAME: "To'liq ismingizni jo'nating",
+            Client.STATE_PHONE: "Telefon raqamingizni kiriting\n(+998XXXXXXXXX)",
+            Client.STATE_EMAIL: "Elektron pochtangizni kiriting",
+            Client.STATE_COUNTRY: "Manzilingizni kiriting",
+            Client.STATE_IS_FIRM: "is firm"
+        }
+
+        if client.state == 3:
+            keyboard = [
+                [
+                    InlineKeyboardButton("yes", callback_data='1'),
+                    InlineKeyboardButton("no", callback_data='0')
+
+                ]
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text(text.get(client.state), reply_markup=reply_markup)
+        elif client.state == 9:
+            keyboard = [
+                [
+                    InlineKeyboardButton("Asosiy", callback_data='asd')
+
+                ]
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            self.updater.bot.send_message(chat_id=client.telegram_user_id, text="Sizning arizangiz Qabul qilindi javobni kuting", reply_markup=reply_markup)
+            # update.message.reply_text(f"Sizning arizangiz Qabul qilindi javobni kuting", reply_markup=reply_markup)
+        else:
+            self.updater.bot.send_message(chat_id=client.telegram_user_id, text=text.get(client.state))
 
     def handle(self, *args, **kwargs):
         dispatcher = self.updater.dispatcher
@@ -512,9 +622,10 @@ class Command(BotBase):
         dispatcher.add_handler(CallbackQueryHandler(self.baby, pattern="^(baby)$"))
         dispatcher.add_handler(CallbackQueryHandler(self.pet, pattern="^(pet)$"))
         dispatcher.add_handler(CallbackQueryHandler(self.calendar, pattern="^(calendar)$"))
+        dispatcher.add_handler(CallbackQueryHandler(self.calendar2, pattern="^(calendar2)$"))
         dispatcher.add_handler(CallbackQueryHandler(self.days, pattern="^(days)$"))
-        dispatcher.add_handler(CallbackQueryHandler(self.days2, pattern="^(\d{2}\.\d{2})$"))
-
+        dispatcher.add_handler(CallbackQueryHandler(self.days2, pattern="^(\d{4}\-\d{2}\-\d{2})$"))
+        dispatcher.add_handler(CallbackQueryHandler(self.message_handler, pattern="^(\d{1})$"))
         dispatcher.add_handler(CallbackQueryHandler(self.done, pattern="^(done)$"))
 
         dispatcher.add_handler(CallbackQueryHandler(self.spa, pattern="^(spa)$"))
@@ -525,6 +636,8 @@ class Command(BotBase):
         dispatcher.add_handler(CallbackQueryHandler(self.number, pattern="^(number)$"))
         dispatcher.add_handler(CommandHandler('start', self.start))
         dispatcher.add_handler(CallbackQueryHandler(self.button))
+
+        dispatcher.add_handler(MessageHandler(Filters.all & ~Filters.command, self.message_handler))
 
         self.updater.start_polling()
         self.updater.idle()

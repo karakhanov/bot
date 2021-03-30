@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # from django.contrib.auth.models import AbstractUser
 
@@ -23,7 +26,7 @@ class Client(models.Model):
     STATE_COUNTRY = 4
 
     telegram_user_id = models.BigAutoField(primary_key=True)
-    user = models.OneToOneField(UserModel, on_delete=models.CASCADE, related_name='client')
+    # user = models.OneToOneField(UserModel, on_delete=models.CASCADE, related_name='client')
     fullName = models.CharField(max_length=50, default=None, null=True)
     phone = models.CharField(max_length=15, default=None, null=True)
     email = models.CharField(max_length=50, default=None, null=True)
