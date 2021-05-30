@@ -11,6 +11,7 @@ UserModel = get_user_model()
 
 class UserTelegram(models.Model):
     id_telegram = models.CharField(max_length=10, primary_key=True)
+    lan = models.CharField(max_length=2, null=True)
     username = models.CharField(max_length=30, null=True)
     bed = models.CharField(null=True, max_length=5)
     baby = models.CharField(null=True, max_length=5)
