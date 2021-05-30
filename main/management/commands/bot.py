@@ -272,16 +272,21 @@ class Command(BotBase):
             reply_markup = InlineKeyboardMarkup(keyboard)
             query.edit_message_text(text=menu, reply_markup=reply_markup)
         elif asd == 'asd':
+            print('asd')
             if len(query.data) == 4:
+                print('asd22')
                 j = query.data[3]
+                print(j)
                 user = user_func(update)
-                if j == 1:
+                if j == '1':
                     user.lan = 'uz'
-                elif j == 2:
+                    print('uzzz')
+                elif j == '2':
                     user.lan = 'ru'
-                elif j == 3:
+                    print('susss')
+                elif j == '3':
                     user.lan = 'en'
-                print(user.save())
+            user.save()
 
             keyboard = [
                 [

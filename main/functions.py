@@ -6,7 +6,7 @@ def user_func(update):
         user = UserTelegram.objects.get(id_telegram=update.effective_user.id)
     except:
         user = UserTelegram(id_telegram=update.effective_user.id, username=update.effective_user.username, bed=1,
-                            baby=0, pet=0, breakfast=0)
+                            baby=0, pet=0, breakfast=0, lan='uz')
         user.save()
     return user
 
