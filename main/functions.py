@@ -11,10 +11,10 @@ def user_func(update):
     return user
 
 
-def client_func(update):
+def client_func(update, user):
     try:
         client = Client.objects.get(telegram_user_id=update.effective_user.id)
     except:
-        client = Client(telegram_user_id=update.effective_user.id, state=Client.STATE_FULLNAME)
+        client = Client(telegram_user_id=update.effective_user.id, state=Client.STATE_FULLNAME, user_info=user)
         client.save()
     return client

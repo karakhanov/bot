@@ -190,7 +190,7 @@ def getword(word, lang):
         },
         '31': {
             'uz': "Asosiy",
-            'ru': 'Базовый',
+            'ru': 'главный ',
             'en': 'asd'
         },
         '32': {
@@ -203,5 +203,3 @@ def getword(word, lang):
 
     return language[word][lang]
 
-
-print(getword('6','uz'))

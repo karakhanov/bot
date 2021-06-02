@@ -476,8 +476,8 @@ class Command(BotBase):
         query.edit_message_text(getword('23', user.lan), reply_markup=reply_markup)
 
     def done(self, update: Update, context: CallbackContext) -> None:
-        client = client_func(update)
         user = user_func(update)
+        client = client_func(update, user)
         query = update.callback_query
         query.answer()
         client.state = Client.STATE_FULLNAME
@@ -500,7 +500,7 @@ class Command(BotBase):
             query.answer()
         except:
             pass
-        client = client_func(update)
+        client = client_func(update, user)
         try:
             msg = str(update.message.text).strip()
         except:
@@ -565,6 +565,10 @@ class Command(BotBase):
 
                 ]
             ]
+            #todo adminga
+            adminkey = [[InlineKeyboardButton('qabul qilish', callback_data='asd')]]
+            reply_markup = InlineKeyboardMarkup(adminkey)
+            self.updater.bot.send_message(chat_id=920393608, text=str(client), reply_markup=reply_markup)
 
             reply_markup = InlineKeyboardMarkup(keyboard)
             self.updater.bot.send_message(chat_id=client.telegram_user_id,

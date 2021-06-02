@@ -27,10 +27,13 @@ class Client(models.Model):
     STATE_COUNTRY = 4
 
     telegram_user_id = models.BigAutoField(primary_key=True)
-    # user = models.OneToOneField(UserModel, on_delete=models.CASCADE, related_name='client')
+    user_info = models.ForeignKey(UserTelegram, on_delete=models.CASCADE,  default=None, null=True)
     fullName = models.CharField(max_length=50, default=None, null=True)
     phone = models.CharField(max_length=15, default=None, null=True)
     email = models.CharField(max_length=50, default=None, null=True)
     is_firm = models.SmallIntegerField(default=None, null=True)
     country = models.CharField(max_length=20, default=None, null=True)
     state = models.IntegerField(default=STATE_FULLNAME)
+
+    def __str__(self):
+        return f'{self.fullName}\n{self.phone}\n{self.country} {self.user_info.lan}'
