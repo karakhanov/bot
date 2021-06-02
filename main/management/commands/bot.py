@@ -7,7 +7,7 @@ from django.conf import settings
 from ._base import BotBase
 from ._words import getword
 from main.models import UserTelegram, Client
-from main.functions import user_func, client_func
+from main.functions import user_func, client_func, do_order
 from django.core.validators import EmailValidator
 from main.validators import PhoneValidator
 
@@ -188,6 +188,9 @@ class Command(BotBase):
         keyboard = []
         menu = 'Меню'
         asd = query.data[:3]
+        acception = query.data[:9]
+        cancel = query.data[:6]
+        print(acception)
         if query.data == '1kom':
             keyboard = [
                 [
@@ -215,15 +218,21 @@ class Command(BotBase):
             query.edit_message_text(text=menu, reply_markup=reply_markup)
         if query.data == 'comnE' or query.data == 'comnS' or query.data == 'comnD' or query.data == 'comnL':
             user = user_func(update)
+            client = client_func(update, user)
             photo = ''
             if query.data == 'comnE':
                 photo = 'econom.jpg'
+                client.room_class = 'econom'
             elif query.data == 'comnS':
                 photo = 'standart.jpg'
+                client.room_class = 'standart'
             elif query.data == 'comnD':
                 photo = 'yarimluks.jpg'
+                client.room_class = 'halfLuks'
             elif query.data == 'comnL':
                 photo = 'luks.jpg'
+                client.room_class = 'Luks'
+            client.save()
 
             keyboard = [
                 [
@@ -307,6 +316,22 @@ class Command(BotBase):
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             query.edit_message_text(text=menu, reply_markup=reply_markup)
+        elif acception == 'acception':
+            info = query.data[9:]
+            print(info)
+            client = Client.objects.get(telegram_user_id=info)
+            do_order(client)
+            query.message.delete()
+        elif cancel == 'cancel':
+            info = query.data[6:]
+            print(info)
+            client = Client.objects.get(telegram_user_id=info)
+            query.message.delete()
+
+            adminkey = [[InlineKeyboardButton(getword('6', user.lan), callback_data='delete')]]
+            reply_markup = InlineKeyboardMarkup(adminkey)
+            self.updater.bot.send_message(chat_id=client.telegram_user_id, text='sorry', reply_markup=reply_markup)
+
 
     def info(self, update: Update, context: CallbackContext) -> None:
         go = "0"
@@ -371,7 +396,6 @@ class Command(BotBase):
         ''', reply_markup=reply_markup)
 
     def calendar(self, update: Update, context: CallbackContext) -> None:
-
         query = update.callback_query
         query.answer()
         user = user_func(update)
@@ -441,21 +465,20 @@ class Command(BotBase):
             i += 1
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        query.edit_message_text(getword('22',user.lan), reply_markup=reply_markup)
+        query.edit_message_text(getword('22', user.lan), reply_markup=reply_markup)
 
     def days2(self, update: Update, context: CallbackContext) -> None:
-
+        user = user_func(update)
+        client = client_func(update, user)
         query = update.callback_query
         query.answer()
-
-        user = user_func(update)
         mydate = query.data.replace('-', '/')
         print(str(mydate)[2:])
         date_time_str = str(mydate)[2:]+' 00:00:00'
-
         date_time_obj = datetime.datetime.strptime(date_time_str, '%y/%m/%d %H:%M:%S')
-
         asd = date_time_obj.date()
+        client.start_date = asd
+        client.save()
         asd = asd + datetime.timedelta(days=1)
 
         tmp = []
@@ -464,7 +487,7 @@ class Command(BotBase):
         y = 1
         while i <= 5:
             while y <= 6:
-                tmp.append(InlineKeyboardButton('{0:02d}.{1:02d}'.format(asd.day, asd.month), callback_data='done'))
+                tmp.append(InlineKeyboardButton('{0:02d}.{1:02d}'.format(asd.day, asd.month), callback_data=f'done{asd}'))
                 asd += datetime.timedelta(days=1)
                 y += 1
             y = 1
@@ -480,6 +503,14 @@ class Command(BotBase):
         client = client_func(update, user)
         query = update.callback_query
         query.answer()
+        ddata = query.data[-10:]
+        mydate = ddata.replace('-', '/')
+        print(str(mydate)[2:])
+        date_time_str = str(mydate)[2:] + ' 00:00:00'
+        date_time_obj = datetime.datetime.strptime(date_time_str, '%y/%m/%d %H:%M:%S')
+        asd = date_time_obj.date()
+        client.finish_date = asd
+
         client.state = Client.STATE_FULLNAME
         client.save()
 
@@ -566,7 +597,8 @@ class Command(BotBase):
                 ]
             ]
             #todo adminga
-            adminkey = [[InlineKeyboardButton('qabul qilish', callback_data='asd')]]
+            adminkey = [[InlineKeyboardButton('accept', callback_data=f'acception{client.telegram_user_id}')],
+                        [InlineKeyboardButton('cancel', callback_data=f'cancel{client.telegram_user_id}')]]
             reply_markup = InlineKeyboardMarkup(adminkey)
             self.updater.bot.send_message(chat_id=920393608, text=str(client), reply_markup=reply_markup)
 
@@ -589,7 +621,7 @@ class Command(BotBase):
         dispatcher.add_handler(CallbackQueryHandler(self.days, pattern="^(days)$"))
         dispatcher.add_handler(CallbackQueryHandler(self.days2, pattern="^(\d{4}\-\d{2}\-\d{2})$"))
         dispatcher.add_handler(CallbackQueryHandler(self.message_handler, pattern="^(\d{1})$"))
-        dispatcher.add_handler(CallbackQueryHandler(self.done, pattern="^(done)$"))
+        dispatcher.add_handler(CallbackQueryHandler(self.done, pattern="^(done\d{4}\-\d{2}\-\d{2})$"))
 
         dispatcher.add_handler(CallbackQueryHandler(self.spa, pattern="^(spa)$"))
         dispatcher.add_handler(CallbackQueryHandler(self.basseyn, pattern="^(basseyn)$"))
